@@ -13,16 +13,23 @@ def change_directory(directory):
         return False
 
 def test_regular(regular=r"([a-zA-Z]+)-?(\d+[a-zA-Z]?)\.(\S+)"):
+    flag = False
     for each in os.listdir():
         if re.match(regular, each):
             tmp = re.findall(regular, each)
             prefix = tmp[0][0].lower()
             serial = tmp[0][1]
-            postfix = tmp[0][2]
+            postfix = tmp[0][2].lower()
             name = prefix + "-" + serial + "." + postfix
-            print("will rename from <{}> to <{}>".format(each, name))
+            if each == name:
+                continue
+            print(">>> will rename <{}> ---> <{}>".format(each, name))
+            flag = True
         else:
-            print(">>> {} not matched".format(each))
+            continue
+
+    if not flag:
+        print("no file will be renamed")
 
 def rename(regular=r"([a-zA-Z]+)-?(\d+[a-zA-Z]?)\.(\S+)"):
     for each in os.listdir():
@@ -32,10 +39,12 @@ def rename(regular=r"([a-zA-Z]+)-?(\d+[a-zA-Z]?)\.(\S+)"):
             serial = tmp[0][1]
             postfix = tmp[0][2]
             name = prefix + "-" + serial + "." + postfix
+            if each == name:
+                continue
             shutil.move(each, name)
-            print("rename from <{}> to <{}>".format(each, name))
+            print(">>> <{}> ---> <{}>".format(each, name))
         except IndexError as _:
-            print(">>> {} not matched".format(each))
+            continue
             
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
