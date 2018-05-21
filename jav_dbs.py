@@ -59,6 +59,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--title", help="show title of JAV id")
     parser.add_argument("-L", "--link", help="show url of JAV id")
     parser.add_argument("-a", "--actress", help="show all actress of JAV id")
+    parser.add_argument("-s", "--search", help="search title from all JAV, all elements joined with +")
     args = parser.parse_args()
 
     dbs = Database()
@@ -72,5 +73,16 @@ if __name__ == "__main__":
     elif args.actress:
         for each in dbs.get_players(args.actress):
             print(each)
+    elif args.search:
+        elements = args.search.split("+")
+        for e_id in dbs.get_all_ids():
+            e_name = dbs.get_title(e_id)
+            flag = True
+            for e_ele in elements:
+                if e_ele not in e_name:
+                    flag = False
+                    break
+            if flag:
+                print("{}:{} matched".format(e_id, e_name))
     else:
         print("Please input -h to get help message.")
