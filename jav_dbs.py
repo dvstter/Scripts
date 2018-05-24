@@ -65,7 +65,8 @@ if __name__ == "__main__":
     dbs = Database()
     if args.list:
         for each in dbs.get_all_ids():
-            print(each)
+            name = dbs.get_title(each)
+            print("{}:{}".format(each, name))
     elif args.title:
         print(dbs.get_title(args.title))
     elif args.link:
