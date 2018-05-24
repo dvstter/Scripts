@@ -12,12 +12,15 @@ def change_directory(directory):
         os.chdir(directory)
         return True
     except OSError as e:
-        print("Error: <{}> is not a valid directory.".format(e.filename))
+        print(f"Error: <{e.filename}> is not a valid directory.")
         return False
 
 def rename(regular=None, repl=None, test_flag=False):
     flag = False
     for each in os.listdir():
+        if not os.path.isfile(each):
+            continue
+
         if re.search(regular, each):
             name = re.sub(regular, repl, each).lower()
             if each == name:
@@ -26,9 +29,9 @@ def rename(regular=None, repl=None, test_flag=False):
             flag = True
             if not test_flag:
                 shutil.move(each, name)
-                print(">>> <{}> ---> <{}>".format(each, name))
+                print(f">>> <{each}> ---> <{name}>")
             else:
-                print(">>> will rename <{}> ---> <{}>".format(each, name))
+                print(f">>> will rename <{each}> ---> <{name}>")
 
     if not flag and test_flag:
         print("no file will be renamed")
