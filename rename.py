@@ -4,6 +4,9 @@ import re
 import shutil
 import os
 
+AV_PATTERN = r"([a-zA-Z]+)-?(\d+[a-zA-Z]?)\.(\S+)"
+AV_REPL= r"\1-\2.\3"
+
 def change_directory(directory):
     try:
         os.chdir(directory)
@@ -12,43 +15,28 @@ def change_directory(directory):
         print("Error: <{}> is not a valid directory.".format(e.filename))
         return False
 
-def test_regular(regular=r"([a-zA-Z]+)-?(\d+[a-zA-Z]?)\.(\S+)"):
+def rename(regular=None, repl=None, test_flag=False):
     flag = False
     for each in os.listdir():
-        if re.match(regular, each):
-            tmp = re.findall(regular, each)
-            prefix = tmp[0][0].lower()
-            serial = tmp[0][1]
-            postfix = tmp[0][2].lower()
-            name = prefix + "-" + serial + "." + postfix
+        if re.search(regular, each):
+            name = re.sub(regular, repl, each).lower()
             if each == name:
                 continue
-            print(">>> will rename <{}> ---> <{}>".format(each, name))
+
             flag = True
-        else:
-            continue
+            if not test_flag:
+                shutil.move(each, name)
+                print(">>> <{}> ---> <{}>".format(each, name))
+            else:
+                print(">>> will rename <{}> ---> <{}>".format(each, name))
 
-    if not flag:
+    if not flag and test_flag:
         print("no file will be renamed")
-
-def rename(regular=r"([a-zA-Z]+)-?(\d+[a-zA-Z]?)\.(\S+)"):
-    for each in os.listdir():
-        tmp = re.findall(regular, each)
-        try:
-            prefix = tmp[0][0].lower()
-            serial = tmp[0][1]
-            postfix = tmp[0][2]
-            name = prefix + "-" + serial + "." + postfix
-            if each == name:
-                continue
-            shutil.move(each, name)
-            print(">>> <{}> ---> <{}>".format(each, name))
-        except IndexError as _:
-            continue
             
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--regular", help="regular expression will be used")
+    parser.add_argument("-p", "--pattern", help="pattern will used to match the file name")
+    parser.add_argument("-r", "--replace", help="replace regular expression")
     parser.add_argument("-d", "--directory", help="directory you want to run the program")
     parser.add_argument("-e", "--execute", help="after debug execute the rename program", action="store_true")
     args = parser.parse_args()
@@ -57,9 +45,16 @@ if __name__ == "__main__":
     	change_directory(args.directory)
 
     if args.execute:
-       rename()
-    else:
-        if args.regular:
-            test_regular(args.regular)
+        if args.pattern and args.replace:
+            rename(regular=args.pattern, repl=args.replace)
+        elif not args.pattern and not args.replace:
+            rename(regular=AV_PATTERN, repl=AV_REPL)
         else:
-            test_regular()
+            print("pattern and replace must be specified altogether or not")
+    else:
+        if args.pattern and args.replace:
+            rename(regular=args.pattern, repl=args.replace, test_flag=True)
+        elif not args.pattern and not args.replace:
+            rename(regular=AV_PATTERN, repl=AV_REPL, test_flag=True)
+        else:
+            print("pattern and replace must be specified altogether or not")
