@@ -4,9 +4,6 @@ import re
 import shutil
 import os
 
-AV_PATTERN = r"([a-zA-Z]+)-?(\d+[a-zA-Z]?)\.(\S+)"
-AV_REPL= r"\1-\2.\3"
-
 def change_directory(directory):
     try:
         os.chdir(directory)
@@ -15,49 +12,89 @@ def change_directory(directory):
         print(f"Error: <{e.filename}> is not a valid directory.")
         return False
 
+def inner_rename_procedure(origin_name):
+    """
+    Inner rename procedure, just for japanese av movies
+    :param origin_name: original filename
+    :return: modified filename
+    """
+    # let matched filename not to modified
+    if re.match(r"^[a-z]{3,}-[0-9]{3,}(-cd\d)?\..*$", origin_name):
+        return origin_name
+
+    try:
+        new_name = re.findall("([a-zA-Z]{3,})", origin_name)[0] + "-" + re.findall("([0-9]{3,})", origin_name)[0]
+        new_name += "." + origin_name.split(".")[-1]
+        return new_name.lower()
+    except IndexError:
+        return origin_name
+
+def user_defined_rename_procedure(origin_name, regular, repl):
+    """
+    User-defined rename procedure
+    :param origin_name: original filename
+    :param regular: match regular expression
+    :param repl: replace regular expression
+    :return: modified filename
+    """
+    try:
+        if re.search(regular, origin_name):
+            new_name = re.sub(regular, repl, origin_name).lower()
+            new_name += "." + origin_name.split(".")[-1]
+            return new_name
+    except Exception:
+        return origin_name
+
 def rename(regular=None, repl=None, test_flag=False):
-    flag = False
+    """
+    Rename all files name in current directory
+    :param regular: user-defined regular expression, must be given altogether with repl
+    :param repl: user-defined replace expression, must be given altogether with regular
+    :param test_flag: False will execute rename all files, True will only give prompts about how the files will be renamed
+    :return: None
+    """
     for each in os.listdir():
+        # exclude all the directories
         if not os.path.isfile(each):
             continue
 
-        if re.search(regular, each):
-            name = re.sub(regular, repl, each).lower()
-            if each == name:
-                continue
+        if not regular and not repl:
+            # parameters regular and repl are not given, use inner rename procedure
+            new_name = inner_rename_procedure(each)
+        elif regular and repl:
+            # parameters regular and repl are given altogether
+            new_name = user_defined_rename_procedure(each)
+        else:
+            new_name = each
 
-            flag = True
-            if not test_flag:
-                shutil.move(each, name)
-                print(f">>> <{each}> ---> <{name}>")
+        if each == new_name:
+            continue
+
+        if not test_flag:
+            if os.path.exists(new_name):
+                print(f"Error: file {each} can not be renamed to {new_name}, because the {new_name} existed!")
             else:
-                print(f">>> will rename <{each}> ---> <{name}>")
+                shutil.move(each, new_name)
+                print(f">>> <{each}> ---> <{new_name}>")
+        else:
+            print(f">>> will rename <{each}> ---> <{new_name}>")
 
-    if not flag and test_flag:
-        print("no file will be renamed")
-            
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--pattern", help="pattern will used to match the file name")
     parser.add_argument("-r", "--replace", help="replace regular expression")
     parser.add_argument("-d", "--directory", help="directory you want to run the program")
-    parser.add_argument("-e", "--execute", help="after debug execute the rename program", action="store_true")
+    parser.add_argument("-e", "--execute", help="after debug execute the rename program", action="store_true", default=False)
     args = parser.parse_args()
 
-    if args.directory:
-    	change_directory(args.directory)
+    args.execute = not args.execute
 
-    if args.execute:
-        if args.pattern and args.replace:
-            rename(regular=args.pattern, repl=args.replace)
-        elif not args.pattern and not args.replace:
-            rename(regular=AV_PATTERN, repl=AV_REPL)
-        else:
-            print("pattern and replace must be specified altogether or not")
+    if args.directory:
+        change_directory(args.directory)
+
+    if args.pattern and args.replace:
+        rename(regular=args.pattern, repl=args.replace, test_flag=args.execute)
+    elif not args.pattern and not args.replace:
+        rename(test_flag=args.execute)
     else:
-        if args.pattern and args.replace:
-            rename(regular=args.pattern, repl=args.replace, test_flag=True)
-        elif not args.pattern and not args.replace:
-            rename(regular=AV_PATTERN, repl=AV_REPL, test_flag=True)
-        else:
-            print("pattern and replace must be specified altogether or not")
+        print("Error: pattern and replace must be specified altogether or not")
