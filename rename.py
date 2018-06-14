@@ -23,7 +23,17 @@ def inner_rename_procedure(origin_name):
         return origin_name
 
     try:
-        new_name = re.findall("([a-zA-Z]{3,})", origin_name)[0] + "-" + re.findall("([0-9]{3,})", origin_name)[0]
+        characters_set = re.findall(r"[a-zA-Z]{3,}", origin_name)
+        numbers_set = re.findall(r"[0-9]{3,}", origin_name)
+        if len(characters_set) > 1:
+            new_name = characters_set[1]
+        else:
+            new_name = characters_set[0]
+
+        if len(numbers_set) > 1:
+            new_name += "-" + numbers_set[1]
+        else:
+            new_name += "-" + numbers_set[1]
         new_name += "." + origin_name.split(".")[-1]
         return new_name.lower()
     except IndexError:
@@ -71,7 +81,9 @@ def rename(regular=None, repl=None, test_flag=False):
             continue
 
         if not test_flag:
-            if os.path.exists(new_name):
+            # this place can not use os.path.exists, because macosx think
+            # lower-case name and higher-case name are same.
+            if new_name in os.listdir():
                 print(f"Error: file {each} can not be renamed to {new_name}, because the {new_name} existed!")
             else:
                 shutil.move(each, new_name)
