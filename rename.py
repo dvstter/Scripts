@@ -52,6 +52,8 @@ def user_defined_rename_procedure(origin_name, regular, repl):
             new_name = re.sub(regular, repl, origin_name).lower()
             new_name += "." + origin_name.split(".")[-1]
             return new_name
+        else:
+            return origin_name
     except Exception:
         return origin_name
 
@@ -73,7 +75,7 @@ def rename(regular=None, repl=None, test_flag=False):
             new_name = inner_rename_procedure(each)
         elif regular and repl:
             # parameters regular and repl are given altogether
-            new_name = user_defined_rename_procedure(each)
+            new_name = user_defined_rename_procedure(each, regular, repl)
         else:
             new_name = each
 
