@@ -1,0 +1,2 @@
+#!/bin/zsh
+/usr/local/bin/python3 /Users/yanghanlin/Scripts/get_pic_size.py $1
