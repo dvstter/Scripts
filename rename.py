@@ -23,17 +23,12 @@ def inner_rename_procedure(origin_name):
         return origin_name
 
     try:
+        # find the contineous characters and numbers set
         characters_set = re.findall(r"[a-zA-Z]{3,}", origin_name)
         numbers_set = re.findall(r"[0-9]{3,}", origin_name)
-        if len(characters_set) > 1:
-            new_name = characters_set[1]
-        else:
-            new_name = characters_set[0]
-
-        if len(numbers_set) > 1:
-            new_name += "-" + numbers_set[1]
-        else:
-            new_name += "-" + numbers_set[1]
+        # based upon the two sets reconstruct the filename and append with file format
+        new_name = characters_set[1] if len(characters_set) > 1 else characters_set[0]
+        new_name += numbers_set[1] if len(numbers_set) > 1 else numbers_set[0]
         new_name += "." + origin_name.split(".")[-1]
         return new_name.lower()
     except IndexError:
